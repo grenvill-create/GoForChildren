@@ -1,20 +1,36 @@
-# React + Vite
+# Go For Children (围棋启蒙：花仙子的魔法花园)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 项目简介
+本项目是一个专为5岁半及以上儿童设计的围棋逻辑启蒙Web程序。不同于传统的围棋教学，本项目强调“图形化”、“游戏化”和“高频互动反馈”，通过拆解基础规则，将枯燥的围棋知识转化为好玩的解谜闯关游戏。重点锻炼儿童的空间想象力、大局观和因果逻辑关系。
 
-Currently, two official plugins are available:
+## 核心教学理念
+- **微小步长学习**：从认识交叉点、数“气”到完成简单的“吃子”，每一步都只教一个极简概念，避免挫败感。
+- **具象化视觉**：
+  - 采用可爱的“花苞精灵”作为棋子（粉红玫瑰与白百合）。
+  - 用发光的“魔法露珠”具象化展示围棋中抽象的“气”。
+- **即时反馈**：走对有动效奖励，走错有温和的物理弹回和引导。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 初始关卡设计规划
+1. **关卡1 - 播种第一颗神奇种子**：了解棋子必须下在交叉点上的基础规则。
+2. **关卡2 - 花苞口渴了（气）**：理解上下左右相连的出口。
+3. **关卡3 - 保护花园！抓住贪吃虫（吃子）**：堵住最后一个出口完成捕捉。
+4. **关卡4 - 手拉手变强大（连接）**：理解相邻同色棋子“气”共享的规则。
+
+## 技术栈规划
+- **前端架构**：React + Vite
+- **UI与动效**：原生 CSS (Vanilla CSS) / CSS Modules
+- **核心逻辑**：纯 JavaScript 围棋规则引擎（适用于小棋盘，如 5x5, 7x7）
+
+---
 
 ## 📅 更新日志
-- **2026-06-22 (稍晚)**：完成项目初始化，构建了“魔法花架”(5x5 Grid) 和“花苞精灵”的视觉组件，加入了可爱的表情和弹跳动效。
+- **2026-06-22 (稍晚)**：完成项目初始化，构建了第一关的“魔法花架”(5x5 Grid) 和“花苞精灵”的视觉组件。实现了落子交互和可爱的表情及弹跳动效。
 - **2026-06-22**：项目初始化，确立核心理念与教学规划，生成基础 `README.md`。
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ⚠️ 开发者约定
+为了保证项目的可维护性，遵循以下开发规范：
+1. 每次程序代码发生修改后，必须同步更新本 `README.md` 中的说明或“更新日志”。
+2. 修改完成后，必须将项目更新提交并推送到 GitHub 远程仓库。
+   - **仓库地址**：`https://github.com/grenvill-create/GoForChildren.git`
