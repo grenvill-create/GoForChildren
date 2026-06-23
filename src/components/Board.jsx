@@ -4,16 +4,17 @@ import './Board.css';
 import happyImg from '../assets/happy.png';
 import sweatyImg from '../assets/sweaty.png';
 import glowImg from '../assets/glow.png';
-import dewdropImg from '../assets/dewdrop.png'; // newly generated dewdrop asset
+import dewdropImg from '../assets/dewdrop.png';
+import bugImg from '../assets/bug.png'; // newly generated bug asset
 
 // Level Configurations
 const LEVELS = {
   1: {
     title: '第一关：播种神奇种子',
     getInitialGrid: () => Array(25).fill(null),
-    targetTiles: [6, 8, 12, 16, 18], // Placed some choices
-    winType: 'single', // Win by hitting any single target
-    itemToPlace: 'pink', // Places a flower bud
+    targetTiles: [6, 8, 12, 16, 18], 
+    winType: 'single', 
+    itemToPlace: 'pink', 
     initialMessage: '把魔法种子种在闪闪发光的星星上吧！',
     successMessage: '太棒啦！种子成功种下，魔法花朵开始发芽了！'
   },
@@ -21,27 +22,85 @@ const LEVELS = {
     title: '第二关：花苞口渴了',
     getInitialGrid: () => {
       const grid = Array(25).fill(null);
-      grid[12] = 'pink'; // Pre-plant a flower bud in the center
+      grid[12] = 'pink'; 
       return grid;
     },
-    targetTiles: [7, 11, 13, 17], // Up, Left, Right, Bottom relative to 12
-    winType: 'all', // Win by hitting ALL targets
-    itemToPlace: 'dewdrop', // Places a water dewdrop
+    targetTiles: [7, 11, 13, 17], 
+    winType: 'all', 
+    itemToPlace: 'dewdrop', 
     initialMessage: '花苞口渴了，把魔法露珠放在它四周（气）的光圈上吧！',
     successMessage: '咕噜咕噜~ 花苞喝饱了水，开心地笑啦！'
+  },
+  3: {
+    title: '第三关：抓住贪吃虫',
+    getInitialGrid: () => {
+      const grid = Array(25).fill(null);
+      grid[12] = 'bug'; 
+      return grid;
+    },
+    targetTiles: [7, 11, 13, 17], 
+    winType: 'capture_bug', 
+    itemToPlace: 'dewdrop', 
+    initialMessage: '第三关：调皮的贪吃虫来了！快用露珠包围它所有的路口！',
+    successMessage: '哇哦！贪吃虫被净化成魔法粉尘啦！太厉害了！'
   }
 };
 
-// FlowerBud component handles all entities on the board (Stones/Dewdrops)
-const FlowerBud = ({ type, isError }) => {
+// Generic Liberty Calculation Algorithm
+const getAdjacentIndices = (index, size) => {
+  const adj = [];
+  const row = Math.floor(index / size);
+  const col = index % size;
+  if (row > 0) adj.push(index - size);
+  if (row < size - 1) adj.push(index + size);
+  if (col > 0) adj.push(index - 1);
+  if (col < size - 1) adj.push(index + 1);
+  return adj;
+};
+
+const calculateGroupLiberties = (currentGrid, startIndex, size) => {
+  const color = currentGrid[startIndex];
+  if (!color) return { liberties: 0, group: [] };
+
+  const group = new Set();
+  const liberties = new Set();
+  const queue = [startIndex];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (group.has(current)) continue;
+    group.add(current);
+
+    const adj = getAdjacentIndices(current, size);
+    for (const neighbor of adj) {
+      const neighborColor = currentGrid[neighbor];
+      if (neighborColor === null) {
+        liberties.add(neighbor);
+      } else if (neighborColor === color) {
+        if (!group.has(neighbor)) {
+          queue.push(neighbor);
+        }
+      }
+    }
+  }
+
+  return { liberties: liberties.size, group: Array.from(group) };
+};
+
+// FlowerBud component handles all entities
+const FlowerBud = ({ type, isError, captured }) => {
   const isPink = type === 'pink' || isError;
   const isDewdrop = type === 'dewdrop';
+  const isBug = type === 'bug';
   
-  const classes = `flower-bud ${isPink ? 'bud-pink' : 'bud-white'} ${isError ? 'bud-error' : ''}`;
+  let classes = `flower-bud ${isPink ? 'bud-pink' : 'bud-white'}`;
+  if (isError) classes += ' bud-error';
+  if (captured) classes += ' bud-captured'; // For capture animation
   
   let imgSrc = happyImg;
   if (isError) imgSrc = sweatyImg;
   if (isDewdrop) imgSrc = dewdropImg;
+  if (isBug) imgSrc = bugImg;
   
   return (
     <div className={classes}>
@@ -64,27 +123,28 @@ const FlowerBud = ({ type, isError }) => {
 // Board Component
 const Board = () => {
   const size = 5;
-  
   const [currentLevelNum, setCurrentLevelNum] = useState(1);
   const [grid, setGrid] = useState([]);
   
   const [levelComplete, setLevelComplete] = useState(false);
   const [errorTile, setErrorTile] = useState(null);
+  const [capturedTiles, setCapturedTiles] = useState([]);
   const [message, setMessage] = useState('');
 
-  // Setup level state when level changes
+  // Setup level
   useEffect(() => {
     const levelConfig = LEVELS[currentLevelNum];
     setGrid(levelConfig.getInitialGrid());
     setLevelComplete(false);
+    setCapturedTiles([]);
     setMessage(levelConfig.initialMessage);
   }, [currentLevelNum]);
 
   const triggerConfetti = () => {
     confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 },
+      particleCount: 200,
+      spread: 90,
+      origin: { y: 0.5 },
       colors: ['#ffb7b2', '#8be9fd', '#dcedc1', '#ffffff']
     });
   };
@@ -93,27 +153,64 @@ const Board = () => {
     if (levelComplete) return; 
     if (grid[index]) return;   
     if (errorTile !== null) return; 
+    if (capturedTiles.length > 0) return; // wait for capture animation
     
     const levelConfig = LEVELS[currentLevelNum];
     
+    // In Level 3, the player places dewdrops to capture the bug
     if (levelConfig.targetTiles.includes(index)) {
-      // Correct Move!
       const newGrid = [...grid];
       newGrid[index] = levelConfig.itemToPlace;
+      
+      let won = false;
+      let newlyCaptured = [];
+
+      // If win condition is capturing the bug, calculate liberties!
+      if (levelConfig.winType === 'capture_bug') {
+        // Find all bugs and check their liberties
+        for (let i = 0; i < newGrid.length; i++) {
+          if (newGrid[i] === 'bug') {
+            const result = calculateGroupLiberties(newGrid, i, size);
+            if (result.liberties === 0) {
+              // Captured!
+              newlyCaptured = newlyCaptured.concat(result.group);
+            }
+          }
+        }
+        
+        if (newlyCaptured.length > 0) {
+          setCapturedTiles(newlyCaptured);
+          // After 0.8s animation, clear the bugs and win
+          setTimeout(() => {
+            const finalGrid = [...newGrid];
+            newlyCaptured.forEach(ci => finalGrid[ci] = null);
+            setGrid(finalGrid);
+            setCapturedTiles([]);
+            setLevelComplete(true);
+            setMessage(levelConfig.successMessage);
+            triggerConfetti();
+          }, 800);
+        } else {
+           // Calculate how many liberties the bug still has
+           const bugLiberties = calculateGroupLiberties(newGrid, 12, size).liberties; // 12 is the center bug
+           setMessage(`加油！贪吃虫还剩 ${bugLiberties} 个方向可以逃跑！`);
+        }
+        
+        // We set the grid immediately so the dewdrop appears
+        setGrid(newGrid);
+        return;
+      }
+      
+      // Standard win condition logic (Level 1 and 2)
       setGrid(newGrid);
       
-      // Check Win Condition
-      let won = false;
       if (levelConfig.winType === 'single') {
         won = true;
       } else if (levelConfig.winType === 'all') {
-        // Count how many items of `itemToPlace` are on target tiles
         let placedCount = 0;
         levelConfig.targetTiles.forEach(i => {
           if (newGrid[i] === levelConfig.itemToPlace) placedCount++;
         });
-        
-        // Count just placed one, so it must equal length
         if (placedCount === levelConfig.targetTiles.length) {
           won = true;
         } else {
@@ -128,14 +225,14 @@ const Board = () => {
       }
       
     } else {
-      // Wrong Move! Show error bounce
+      // Wrong Move
       setErrorTile(index);
-      setMessage('哎呀，放错地方了！小精灵接不到魔法哦~');
+      setMessage(levelConfig.winType === 'capture_bug' ? '贪吃虫不在这里哦，快堵住它发光的路口！' : '哎呀，放错地方了！');
       
       setTimeout(() => {
         setErrorTile(null);
-        // Reset to initial message, unless they made partial progress in an 'all' level
         let resetMsg = levelConfig.initialMessage;
+        
         if (levelConfig.winType === 'all') {
           let placedCount = 0;
           grid.forEach((cell, i) => {
@@ -144,7 +241,11 @@ const Board = () => {
           if (placedCount > 0) {
             resetMsg = `继续努力，还差 ${levelConfig.targetTiles.length - placedCount} 颗露珠！`;
           }
+        } else if (levelConfig.winType === 'capture_bug') {
+           const bugLiberties = calculateGroupLiberties(grid, 12, size).liberties;
+           if (bugLiberties < 4) resetMsg = `加油！贪吃虫还剩 ${bugLiberties} 个方向可以逃跑！`;
         }
+        
         setMessage(resetMsg);
       }, 800);
     }
@@ -179,9 +280,9 @@ const Board = () => {
       <div className="board-container">
         <div className="trellis-grid" style={{ gridTemplateColumns: `repeat(${size}, 1fr)` }}>
           {grid.map((cell, index) => {
-            // A tile is a target if it's in targetTiles and doesn't currently hold the correct item
             const isTarget = levelConfig && levelConfig.targetTiles.includes(index) && !levelComplete && cell !== levelConfig.itemToPlace;
             const isError = errorTile === index;
+            const isCaptured = capturedTiles.includes(index);
             
             return (
               <div 
@@ -193,12 +294,12 @@ const Board = () => {
                 <div className="line-v"></div>
                 
                 <div className="hitbox">
-                  {/* Glowing targets replaced with Magic Image */}
+                  {/* Glowing targets */}
                   {isTarget && !cell && <img src={glowImg} alt="glow target" className="highlight-star" style={{ width: '50px', height: '50px', mixBlendMode: 'screen' }} />}
                 </div>
                 
-                {/* Render bud/dewdrop if it's placed permanently OR temporarily due to error */}
-                {(cell || isError) && <FlowerBud type={cell || 'pink'} isError={isError} />}
+                {/* Render entity */}
+                {(cell || isError) && <FlowerBud type={cell || levelConfig.itemToPlace} isError={isError} captured={isCaptured} />}
               </div>
             );
           })}
@@ -223,15 +324,14 @@ const Board = () => {
           onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
           onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
           onClick={() => {
-            if (currentLevelNum === 1) {
-              setCurrentLevelNum(2);
+            if (currentLevelNum < 3) {
+              setCurrentLevelNum(currentLevelNum + 1);
             } else {
-              // Loop back to level 1 for now if we don't have level 3 yet
-              setCurrentLevelNum(1);
+              setCurrentLevelNum(1); // loop back
             }
           }}
         >
-          {currentLevelNum === 1 ? '👉 进入第二关！' : '🔁 再玩一次！'}
+          {currentLevelNum < 3 ? '👉 进入下一关！' : '🔁 从头再玩！'}
         </button>
       )}
 
