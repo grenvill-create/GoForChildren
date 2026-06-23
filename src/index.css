@@ -21,6 +21,10 @@
 
 body {
   background-color: var(--color-bg);
+  background-image: url('./assets/bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-family);
   display: flex;

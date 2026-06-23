@@ -1,32 +1,19 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import './Board.css';
+import happyImg from '../assets/happy.png';
+import sweatyImg from '../assets/sweaty.png';
+import glowImg from '../assets/glow.png';
 
 // FlowerBud component (The "Stones")
 const FlowerBud = ({ type, isError }) => {
-  // type can be 'pink', 'white', or 'error' (which renders as a sweat pink bud)
   const isPink = type === 'pink' || isError;
   const classes = `flower-bud ${isPink ? 'bud-pink' : 'bud-white'} ${isError ? 'bud-error' : ''}`;
+  const imgSrc = isError ? sweatyImg : happyImg;
   
   return (
     <div className={classes}>
-      <div className="bud-face">
-        {isError ? (
-          <>
-            <div className="eye left" style={{ borderRadius: '0', height: '2px', top: '35%' }}></div>
-            <div className="eye right" style={{ borderRadius: '0', height: '2px', top: '35%' }}></div>
-            <div className="mouth" style={{ borderBottomColor: 'transparent', borderTopColor: '#555', top: '55%', bottom: 'auto' }}></div>
-            {/* Sweat drop */}
-            <div style={{ position: 'absolute', top: '10%', right: '10%', width: '6px', height: '10px', background: '#8be9fd', borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%' }}></div>
-          </>
-        ) : (
-          <>
-            <div className="eye left"></div>
-            <div className="eye right"></div>
-            <div className="mouth"></div>
-          </>
-        )}
-      </div>
+      <img src={imgSrc} alt="Flower Bud Sprite" style={{ width: '130%', height: '130%', objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }} />
     </div>
   );
 };
@@ -117,8 +104,8 @@ const Board = () => {
                 <div className="line-v"></div>
                 
                 <div className="hitbox">
-                  {/* Glowing targets */}
-                  {isTarget && !cell && <div className="highlight-star">✨</div>}
+                  {/* Glowing targets replaced with Magic Image */}
+                  {isTarget && !cell && <img src={glowImg} alt="glow target" className="highlight-star" style={{ width: '50px', height: '50px' }} />}
                 </div>
                 
                 {/* Render bud if it's placed permanently OR temporarily due to error */}
