@@ -43,6 +43,36 @@ const LEVELS = {
     itemToPlace: 'dewdrop', 
     initialMessage: '第三关：调皮的贪吃虫来了！快用露珠包围它所有的路口！',
     successMessage: '哇哦！贪吃虫被净化成魔法粉尘啦！太厉害了！'
+  },
+  4: {
+    title: '第四关：花苞的求救',
+    getInitialGrid: () => {
+      const grid = Array(25).fill(null);
+      grid[12] = 'pink';
+      grid[11] = 'bug';
+      grid[13] = 'bug';
+      return grid;
+    },
+    targetTiles: [7, 17], 
+    winType: 'escape',
+    itemToPlace: 'pink',
+    initialMessage: '第四关：危险！快在发光点种下新花苞，让它们连成一排逃跑！',
+    successMessage: '太棒了！花苞连成了长长的一排，成功逃跑啦！'
+  },
+  5: {
+    title: '第五关：手拉手，好朋友',
+    getInitialGrid: () => {
+      const grid = Array(25).fill(null);
+      grid[11] = 'pink'; 
+      grid[13] = 'pink'; 
+      grid[7] = 'bug';   
+      return grid;
+    },
+    targetTiles: [12],
+    winType: 'connect',
+    itemToPlace: 'pink',
+    initialMessage: '第五关：贪吃虫想切断花苞们！快在中间种下一颗种子，让它们手拉手变成好朋友！',
+    successMessage: '哇哦！花苞们手拉手连在了一起，贪吃虫再也咬不动它们了！'
   }
 };
 
@@ -110,9 +140,8 @@ const FlowerBud = ({ type, isError, captured }) => {
         style={{ 
           width: '100%', 
           height: '100%', 
-          objectFit: 'cover', 
-          borderRadius: '50%',
-          boxShadow: isDewdrop ? '0 0 15px rgba(139, 233, 253, 0.8)' : '0 6px 12px rgba(0,0,0,0.3)',
+          objectFit: 'contain', 
+          boxShadow: isDewdrop ? '0 0 15px rgba(139, 233, 253, 0.8)' : 'none',
           transform: isDewdrop ? 'scale(0.8)' : 'scale(1.2)'
         }} 
       />
@@ -201,7 +230,7 @@ const Board = () => {
         return;
       }
       
-      // Standard win condition logic (Level 1 and 2)
+      // Standard win condition logic (Level 1, 2, 4, 5)
       setGrid(newGrid);
       
       if (levelConfig.winType === 'single') {
@@ -215,6 +244,19 @@ const Board = () => {
           won = true;
         } else {
           setMessage(`太棒了！还差 ${levelConfig.targetTiles.length - placedCount} 颗露珠！`);
+        }
+      } else if (levelConfig.winType === 'escape') {
+        // Did liberties increase?
+        const initialLiberties = calculateGroupLiberties(grid, 12, size).liberties;
+        const newLiberties = calculateGroupLiberties(newGrid, index, size).liberties;
+        if (newLiberties > initialLiberties) {
+          won = true;
+        }
+      } else if (levelConfig.winType === 'connect') {
+        // Are 11 and 13 in the same group now?
+        const groupInfo = calculateGroupLiberties(newGrid, 11, size);
+        if (groupInfo.group.includes(13)) {
+          won = true;
         }
       }
       
@@ -324,14 +366,14 @@ const Board = () => {
           onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
           onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
           onClick={() => {
-            if (currentLevelNum < 3) {
+            if (currentLevelNum < 5) {
               setCurrentLevelNum(currentLevelNum + 1);
             } else {
               setCurrentLevelNum(1); // loop back
             }
           }}
         >
-          {currentLevelNum < 3 ? '👉 进入下一关！' : '🔁 从头再玩！'}
+          {currentLevelNum < 5 ? '👉 进入下一关！' : '🔁 从头再玩！'}
         </button>
       )}
 
