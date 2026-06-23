@@ -49,10 +49,12 @@ const FlowerBud = ({ type, isError }) => {
         src={imgSrc} 
         alt="Sprite" 
         style={{ 
-          width: isDewdrop ? '80%' : '130%', // Dewdrops are slightly smaller
-          height: isDewdrop ? '80%' : '130%', 
-          objectFit: 'contain', 
-          filter: isDewdrop ? 'drop-shadow(0 0 10px rgba(139, 233, 253, 0.8))' : 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'cover', 
+          borderRadius: '50%',
+          boxShadow: isDewdrop ? '0 0 15px rgba(139, 233, 253, 0.8)' : '0 6px 12px rgba(0,0,0,0.3)',
+          transform: isDewdrop ? 'scale(0.8)' : 'scale(1.2)'
         }} 
       />
     </div>
@@ -191,8 +193,8 @@ const Board = () => {
                 <div className="line-v"></div>
                 
                 <div className="hitbox">
-                  {/* Glowing targets */}
-                  {isTarget && !cell && <img src={glowImg} alt="glow target" className="highlight-star" style={{ width: '50px', height: '50px' }} />}
+                  {/* Glowing targets replaced with Magic Image */}
+                  {isTarget && !cell && <img src={glowImg} alt="glow target" className="highlight-star" style={{ width: '50px', height: '50px', mixBlendMode: 'screen' }} />}
                 </div>
                 
                 {/* Render bud/dewdrop if it's placed permanently OR temporarily due to error */}
