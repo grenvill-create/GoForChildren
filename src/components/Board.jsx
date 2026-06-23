@@ -73,6 +73,54 @@ const LEVELS = {
     itemToPlace: 'pink',
     initialMessage: '第五关：贪吃虫想切断花苞们！快在中间种下一颗种子，让它们手拉手变成好朋友！',
     successMessage: '哇哦！花苞们手拉手连在了一起，贪吃虫再也咬不动它们了！'
+  },
+  6: {
+    title: '第六关：悬崖边的贪吃虫',
+    getInitialGrid: () => {
+      const grid = Array(25).fill(null);
+      grid[9] = 'bug'; // Bug at the right edge
+      grid[14] = 'pink'; // Block bottom
+      return grid;
+    },
+    targetTiles: [8], // Block the inside (center), force bug to corner(4)
+    winType: 'single',
+    itemToPlace: 'dewdrop',
+    initialMessage: '第六关：把贪吃虫往棋盘边缘（悬崖）赶！快把露珠放在发光点，堵住它往中间跑的路！',
+    successMessage: '干得漂亮！贪吃虫被逼到悬崖边，马上就要被抓住啦！'
+  },
+  7: {
+    title: '第七关：安全的老虎口',
+    getInitialGrid: () => {
+      const grid = Array(25).fill(null);
+      grid[7] = 'pink';
+      grid[11] = 'pink';
+      grid[13] = 'pink';
+      grid[2] = 'bug';
+      return grid;
+    },
+    targetTiles: [17], // Complete the diamond shape, leaving 12 as tiger's mouth
+    winType: 'single',
+    itemToPlace: 'pink',
+    initialMessage: '第七关：贪吃虫在靠近！快在发光点种下花苞，摆出一个“老虎口”陷阱！',
+    successMessage: '老虎口做好了！贪吃虫要是敢进来，就会被一口吃掉！'
+  },
+  8: {
+    title: '第八关：无敌魔法屋（两只眼）',
+    getInitialGrid: () => {
+      const grid = Array(25).fill(null);
+      // Create a straight-3 shape surrounded by walls
+      grid[6] = 'pink'; grid[7] = 'pink'; grid[8] = 'pink';
+      grid[10] = 'pink'; grid[14] = 'pink';
+      grid[16] = 'pink'; grid[17] = 'pink'; grid[18] = 'pink';
+      grid[21] = 'bug'; grid[22] = 'bug'; grid[23] = 'bug';
+      // 11, 12, 13 are empty inside
+      return grid;
+    },
+    targetTiles: [12], // Play in the middle to make two separate eyes (11 and 13)
+    winType: 'single',
+    itemToPlace: 'pink',
+    initialMessage: '第八关：危险！快在正中间种下花苞，造一个有两个房间的“无敌魔法屋”！',
+    successMessage: '太聪明啦！有了两只真眼，贪吃虫永远也吃不掉你的魔法屋！'
   }
 };
 
@@ -366,14 +414,14 @@ const Board = () => {
           onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
           onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
           onClick={() => {
-            if (currentLevelNum < 5) {
+            if (currentLevelNum < 8) {
               setCurrentLevelNum(currentLevelNum + 1);
             } else {
               setCurrentLevelNum(1); // loop back
             }
           }}
         >
-          {currentLevelNum < 5 ? '👉 进入下一关！' : '🔁 从头再玩！'}
+          {currentLevelNum < 8 ? '👉 进入下一关！' : '🔁 从头再玩！'}
         </button>
       )}
 
